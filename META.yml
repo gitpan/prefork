@@ -1,5 +1,5 @@
 name: prefork
-version: 0.02
+version: 0.03
 abstract: Pragma to ensure modules are fully loaded before forking
 author: Adam Kennedy<cpan@ali.as>
 license: perl
@@ -9,6 +9,7 @@ build_requires:
   File::Spec: 0.82
 requires:
   perl: 5.005
+  Scalar::Util: 1.10
 no_index:
   directory:
     - inc

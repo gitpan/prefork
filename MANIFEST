@@ -19,3 +19,4 @@ README
 t/01_compile.t
 t/02_main.t
 t/03_pragma.t
+t/04_notify.t

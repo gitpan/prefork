@@ -38,6 +38,19 @@ In a script or module that is going to be forking.
   # Or call it directly
   prefork::enable();
 
+In a third-party run-time loader
+
+  package Runtime::Loader;
+  
+  use prefork ();
+  prefork::notify( \&load_everything );
+  
+  ...
+  
+  sub load_everything { ... }
+  
+  1;
+  
 =head1 INTRODUCTION
 
 The task of optimizing module loading in Perl tends to move in two different
@@ -100,10 +113,19 @@ intended to work easily with existing modules, needing only small changes.
 For example, prefork itself will detect the $ENV{MOD_PERL} environment
 variable and automatically start in forking mode.
 
-Over time, we also intend to build in additional compatbility with other
-modules involved with dynamic loading, such as Class::Autouse and others.
+prefork has support for integrating with third-party modules, such as
+L<Class::Autouse|Class::Autouse>. The C<notify> function allows these
+run-time loaders to register callbacks, to be called once prefork enters
+forking mode.
 
-=head2 Integrating with prefork
+The synopsis entry above describes adding support for prefork.pm as a
+dependency. To allow your third-party module loader without a dependency
+and only if it is installed use the following:
+
+  eval { require prefork; }
+  prefork::notify( \&function ) unless $@;
+
+=head2 Using prefork.pm
 
 From the Loader side, it is fairly simple. prefork becomes a dependency
 for your module, and you use it as a pragma as documented above.
@@ -146,21 +168,25 @@ prefork provides, you can also do the following.
 
 use 5.005;
 use strict;
-use Carp ();
+use Carp         ();
+use Scalar::Util ();
+use List::Util   ();
 
-use vars qw{$VERSION $FORKING %MODULES};
+use vars qw{$VERSION $FORKING %MODULES @NOTIFY};
 BEGIN {
-	$VERSION = '0.02';
+	$VERSION = '0.03';
 
 	# The main state variable for this package.
 	# Are we in preforking mode.
 	$FORKING = '';
 
-	# The queue of modules to ensure are loaded
+	# The queue of modules to load
 	%MODULES = ();
 
-	# Tests that we can do at build time to integrate with
-	# other modules.
+	# The queue of notification callbacks
+	@NOTIFY = ();
+
+	# Look for situations that need us to start in forking mode
 	$FORKING = 1 if $ENV{MOD_PERL};
 }
 
@@ -197,11 +223,8 @@ sub prefork ($) {
 	return 1 if $MODULES{$module};
 
 	# Load now if enabled, or add to the module list
-	if ( $FORKING ) {
-		require $file;
-	} else {
-		$MODULES{$module} = $file;
-	}
+	return require $file if $FORKING;
+	$MODULES{$module} = $file;
 
 	1;
 }
@@ -242,12 +265,74 @@ sub enable () {
 	# Clear the modules list
 	%MODULES = ();
 
+	# Execute the third-party callbacks
+	while ( my $callback = shift @NOTIFY ) {
+		$callback->();
+	}
+
+	1;
+}
+
+=pod
+
+=head2 notify &function
+
+The C<notify> function is used to integrate support for modules other than
+prefork.pm itself.
+
+A module loader calls the notify function, passing it a reference it a
+CODE reference (either anon or a function reference). prefork will store
+this CODE reference, and execute it immediately as soon as it knows it
+is in forking-mode, but after it loads its own modules.
+
+Callbacks are called in the order they are registered.
+
+Normally, this will happen as soon as the C<enable> function is called.
+
+However, you should be aware that if prefork is B<already> in preforking
+mode at the time that the notify function is called, prefork.pm will
+execute the function immediately.
+
+This means that any third party module loader should be fully loaded and
+initialised B<before> the callback is provided to C<notify>.
+
+Returns true if the function is stored, or dies if not passed a CODE
+reference, or the callback is already set in the notify queue.
+
+=cut
+
+sub notify ($) {
+	# Get the CODE ref callback param
+	my $function = shift;
+	my $reftype  = Scalar::Util::reftype($function);
+	unless ( $reftype and $reftype eq 'CODE' ) {
+		Carp::croak "prefork::notify was not passed a CODE reference";
+	}
+
+	# Call it immediately is already in forking mode
+	if ( $FORKING ) {
+		$function->();
+		return 1;
+	}
+
+	# Is it already defined?
+	if ( List::Util::first { Scalar::Util::refaddr($function) == Scalar::Util::refaddr($_) } @NOTIFY ) {
+		Carp::croak "Callback function already registered";
+	}
+
+	# Add to the queue
+	push @NOTIFY, $function;
+
 	1;
 }
 
 1;
 
 =pod
+
+=head1 TO DO
+
+- Add checks for more pre-forking situations
 
 =head1 SUPPORT
 
