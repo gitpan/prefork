@@ -1,4 +1,8 @@
 Revision history for Perl extension prefork
 
-0.01 Sat Nov  6 2004
+0.02 Sat Nov  6 2004
+	- Adding more documentation
+	- Complete a full set of unit tests
+
+0.01_01 Sat Nov  6 2004
 	- Created the initial version of the file

@@ -1,5 +1,5 @@
 name: prefork
-version: 0.01_01
+version: 0.02
 abstract: Pragma to ensure modules are fully loaded before forking
 author: Adam Kennedy<cpan@ali.as>
 license: perl

@@ -96,7 +96,36 @@ DESCRIPTION
     modules involved with dynamic loading, such as Class::Autouse and
     others.
 
-  Modules Compatible With prefork.pm
+  Integrating with prefork
+    From the Loader side, it is fairly simple. prefork becomes a dependency
+    for your module, and you use it as a pragma as documented above.
+
+    For the Forker, you have two options. Use as a dependency or optional
+    use.
+
+    In the dependency case, you add prefork as a dependency and use it as a
+    pragma with the ':enable' option.
+
+    To add only optional support for prefork, without requiring it to be
+    installed, you should wait until the moment just before you fork and
+    then call prefork::enable directly ONLY if it is loaded.
+
+      # Load modules if any use the prefork pragma.
+      prefork::enable() if $INC{prefork.pm};
+
+    This will cause the modules to be loaded ONLY if there are any modules
+    that need to be loaded. The main advantage of the dependency version is
+    that you only need to enable the module once, and not before each fork.
+
+    If you wish to have your own module leverage off the forking-detection
+    that prefork provides, you can also do the following.
+
+      use prefork;
+      if ( $prefork::FORKING ) {
+            # Complete some preparation task
+      }
+
+  Modules that are prefork-aware
     mod_perl
 
 FUNCTIONS

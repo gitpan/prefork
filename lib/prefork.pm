@@ -103,7 +103,36 @@ variable and automatically start in forking mode.
 Over time, we also intend to build in additional compatbility with other
 modules involved with dynamic loading, such as Class::Autouse and others.
 
-=head2 Modules Compatible With prefork.pm
+=head2 Integrating with prefork
+
+From the Loader side, it is fairly simple. prefork becomes a dependency
+for your module, and you use it as a pragma as documented above.
+
+For the Forker, you have two options. Use as a dependency or optional use.
+
+In the dependency case, you add prefork as a dependency and use it as a
+pragma with the ':enable' option.
+
+To add only optional support for prefork, without requiring it to be
+installed, you should wait until the moment just before you fork and then
+call prefork::enable directly ONLY if it is loaded.
+
+  # Load modules if any use the prefork pragma.
+  prefork::enable() if $INC{prefork.pm};
+
+This will cause the modules to be loaded ONLY if there are any modules that
+need to be loaded. The main advantage of the dependency version is that you
+only need to enable the module once, and not before each fork.
+
+If you wish to have your own module leverage off the forking-detection that
+prefork provides, you can also do the following.
+
+  use prefork;
+  if ( $prefork::FORKING ) {
+  	# Complete some preparation task
+  }
+
+=head2 Modules that are prefork-aware
 
 =over 4
 
@@ -121,7 +150,7 @@ use Carp ();
 
 use vars qw{$VERSION $FORKING %MODULES};
 BEGIN {
-	$VERSION = '0.01_01';
+	$VERSION = '0.02';
 
 	# The main state variable for this package.
 	# Are we in preforking mode.
@@ -130,13 +159,14 @@ BEGIN {
 	# The queue of modules to ensure are loaded
 	%MODULES = ();
 
-	# Early detection of preforking scenarios
+	# Tests that we can do at build time to integrate with
+	# other modules.
 	$FORKING = 1 if $ENV{MOD_PERL};
 }
 
 sub import {
 	return 1 unless $_[1];
-	$_[1] eq ':enable' ? enable() : prefork($_[1]);
+	($_[1] eq ':enable') ? enable() : prefork($_[1]);
 }
 
 =pod
@@ -195,6 +225,7 @@ sub enable () {
 	# Turn on the PREFORK flag, so any additional
 	# 'use prefork ...' calls made during loading
 	# will load immediately.
+	return 1 if $FORKING;
 	$FORKING = 1;
 
 	# Load all of the modules not yet loaded
