@@ -1,5 +1,8 @@
 Revision history for Perl extension prefork
 
+0.04 Tue Feb 15 2005
+	- Removing braindead Build.PL
+
 0.03 Sat Nov 13 2004
 	- Adding support for third-party loader callbacks
 

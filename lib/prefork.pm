@@ -174,7 +174,7 @@ use List::Util   ();
 
 use vars qw{$VERSION $FORKING %MODULES @NOTIFY};
 BEGIN {
-	$VERSION = '0.03';
+	$VERSION = '0.04';
 
 	# The main state variable for this package.
 	# Are we in preforking mode.
@@ -340,7 +340,7 @@ Bugs should be always submitted via the CPAN bug tracker, located at
 
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=prefork>
 
-For other issues, contact the author.
+For other issues, or commercial enhancement or support, contact the author..
 
 =head1 AUTHOR
 
