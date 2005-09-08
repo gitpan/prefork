@@ -1,16 +1,16 @@
 name: prefork
-version: 0.04
-abstract: Pragma to ensure modules are fully loaded before forking
-author: Adam Kennedy<cpan@ali.as>
+version: 1.00
+abstract: Optimized module loading for forking or non-forking processes
+author: Adam Kennedy <cpan@ali.as>
 license: perl
 distribution_type: module
 build_requires:
   Test::More: 0.47
-  File::Spec: 0.82
+  File::Spec: 0.80
 requires:
   perl: 5.005
   Scalar::Util: 1.10
 no_index:
   directory:
     - inc
-generated_by: Module::Install version 0.36
+generated_by: Module::Install version 0.37

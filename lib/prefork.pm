@@ -4,7 +4,7 @@ package prefork;
 
 =head1 NAME
 
-prefork - Optimize module loading across forking and non-forking scenarios
+prefork - Optimized module loading for forking or non-forking processes
 
 =head1 SYNOPSIS
 
@@ -72,24 +72,25 @@ make life worse for the other.
 
 =head1 DESCRIPTION
 
-The prefork pragma is intended to allow module writers to optimise module
-loading for B<both> scenarios with as little additional code as possible.
+The C<prefork> pragma is intended to allow module writers to optimise
+module loading for B<both> scenarios with as little additional code as
+possible.
 
-The prefork.pm is intended to serve as a central and optional marshalling
-point for state detection (are we running in procedural or pre-forking
+prefork.pm is intended to serve as a central and optional marshalling
+point for state detection (are we running in compile-time or run-time
 mode) and to act as a relatively light-weight module loader.
 
 =head2 Loaders and Forkers
 
-prefork is intended to be used in two different ways.
+C<prefork> is intended to be used in two different ways.
 
 The first is by a module that wants to indicate that another module should
 be loaded before forking. This is known as a "Loader".
 
 The other is a script or module that will be initiating the forking. It
 will tell prefork.pm that it is either going to fork, or is about to fork,
-and that the modules previously mentioned by the Loaders should be loaded
-immediately.
+or for some other reason all modules previously mentioned by the Loaders
+should be loaded immediately.
 
 =head2 Usage as a Pragma
 
@@ -97,26 +98,31 @@ A Loader can register a module to be loaded using the following
 
   use prefork 'My::Module';
 
+The same thing can be done in such a way as to not require prefork
+being installed, but taking advantage of it if it is.
+
+  eval "use prefork 'My::Module';";
+
 A Forker can indicate that it will be forking with the following
 
   use prefork ':enable';
 
-In any use of prefork as a pragma, you can only pass a single value as
-argument. Any additional arguments will be ignored. (This may throw an
-error in future versions).
+In any use of C<prefork> as a pragma, you can only pass a single value
+as argument. Any additional arguments will be ignored. (This may throw
+an error in future versions).
 
 =head2 Compatbility with mod_perl and others
 
-Part of the design of prefork, and it's minimalistic nature, is that it is
-intended to work easily with existing modules, needing only small changes.
+Part of the design of C<prefork>, and its minimalistic nature, is that it
+is intended to work easily with existing modules, needing only small
+changes.
 
-For example, prefork itself will detect the $ENV{MOD_PERL} environment
-variable and automatically start in forking mode.
+For example, C<prefork> itself will detect the C<$ENV{MOD_PERL}>
+environment variable and automatically start in forking mode.
 
 prefork has support for integrating with third-party modules, such as
-L<Class::Autouse|Class::Autouse>. The C<notify> function allows these
-run-time loaders to register callbacks, to be called once prefork enters
-forking mode.
+L<Class::Autouse>. The C<notify> function allows these run-time loaders
+to register callbacks, to be called once prefork enters forking mode.
 
 The synopsis entry above describes adding support for prefork.pm as a
 dependency. To allow your third-party module loader without a dependency
@@ -137,7 +143,7 @@ pragma with the ':enable' option.
 
 To add only optional support for prefork, without requiring it to be
 installed, you should wait until the moment just before you fork and then
-call prefork::enable directly ONLY if it is loaded.
+call C<prefork::enable> directly ONLY if it is loaded.
 
   # Load modules if any use the prefork pragma.
   prefork::enable() if $INC{prefork.pm};
@@ -158,7 +164,9 @@ prefork provides, you can also do the following.
 
 =over 4
 
-=item mod_perl
+=item mod_perl/mod_perl2
+
+=item Class::Autouse
 
 =back
 
@@ -169,12 +177,12 @@ prefork provides, you can also do the following.
 use 5.005;
 use strict;
 use Carp         ();
-use Scalar::Util ();
 use List::Util   ();
+use Scalar::Util ();
 
 use vars qw{$VERSION $FORKING %MODULES @NOTIFY};
 BEGIN {
-	$VERSION = '0.04';
+	$VERSION = '1.00';
 
 	# The main state variable for this package.
 	# Are we in preforking mode.
@@ -213,9 +221,9 @@ Returns true on success, or dies on error.
 sub prefork ($) {
 	# Just hand straight to require if enabled
 	my $module = defined $_[0] ? "$_[0]" : ''
-		or Carp::croak 'You did not pass a module name to prefork';
+		or Carp::croak('You did not pass a module name to prefork');
 	$module =~ /^[^\W\d]\w*(?:(?:'|::)[^\W\d]\w*)*$/
-		or Carp::croak "'$module' is not a module name";
+		or Carp::croak("'$module' is not a module name");
 	my $file = join( '/', split /(?:\'|::)/, $module ) . '.pm';
 
 	# Is it already loaded or queued
@@ -280,10 +288,10 @@ sub enable () {
 The C<notify> function is used to integrate support for modules other than
 prefork.pm itself.
 
-A module loader calls the notify function, passing it a reference it a
-CODE reference (either anon or a function reference). prefork will store
-this CODE reference, and execute it immediately as soon as it knows it
-is in forking-mode, but after it loads its own modules.
+A module loader calls the notify function, passing it a reference to a
+C<CODE> reference (either anon or a function reference). C<prefork> will
+store this CODE reference, and execute it immediately as soon as it knows
+it is in forking-mode, but after it loads its own modules.
 
 Callbacks are called in the order they are registered.
 
@@ -296,7 +304,7 @@ execute the function immediately.
 This means that any third party module loader should be fully loaded and
 initialised B<before> the callback is provided to C<notify>.
 
-Returns true if the function is stored, or dies if not passed a CODE
+Returns true if the function is stored, or dies if not passed a C<CODE>
 reference, or the callback is already set in the notify queue.
 
 =cut
@@ -306,7 +314,7 @@ sub notify ($) {
 	my $function = shift;
 	my $reftype  = Scalar::Util::reftype($function);
 	unless ( $reftype and $reftype eq 'CODE' ) {
-		Carp::croak "prefork::notify was not passed a CODE reference";
+		Carp::croak("prefork::notify was not passed a CODE reference");
 	}
 
 	# Call it immediately is already in forking mode
@@ -317,7 +325,7 @@ sub notify ($) {
 
 	# Is it already defined?
 	if ( List::Util::first { Scalar::Util::refaddr($function) == Scalar::Util::refaddr($_) } @NOTIFY ) {
-		Carp::croak "Callback function already registered";
+		Carp::croak("Callback function already registered");
 	}
 
 	# Add to the queue
@@ -325,6 +333,18 @@ sub notify ($) {
 
 	1;
 }
+
+
+
+
+
+#####################################################################
+# Built-in Notifications
+
+# Compile CGI functions automatically
+prefork::notify( sub {
+	CGI->compile() if $INC{'CGI.pm'};
+} );
 
 1;
 
@@ -340,18 +360,19 @@ Bugs should be always submitted via the CPAN bug tracker, located at
 
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=prefork>
 
-For other issues, or commercial enhancement or support, contact the author..
+For other issues, or commercial enhancement or support, contact the author.
 
 =head1 AUTHOR
 
-Adam Kennedy (Maintainer), L<http://ali.as/>, cpan@ali.as
+Adam Kennedy, L<http://ali.as/>, cpan@ali.as
 
 =head1 COPYRIGHT
 
-Thank you to Phase N Australia (L<http://phase-n.com/>) for permitting
-the open sourcing and release of this distribution.
+Thank you to Phase N Australia (L<http://phase-n.com/>) for
+permitting the open sourcing and release of this distribution.
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
+Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
+
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

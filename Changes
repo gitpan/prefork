@@ -1,5 +1,11 @@
 Revision history for Perl extension prefork
 
+1.00 Thu Sep  8 2005
+	- Has proven itself stable, promoting to 1.00
+	- Various small POD clean ups
+	- Adding default notifier to auto-compile the CGI functions
+	- Rebuilding with a newer (better) Module::Install
+
 0.04 Tue Feb 15 2005
 	- Removing braindead Build.PL
 
