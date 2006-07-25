@@ -1,5 +1,8 @@
 Revision history for Perl extension prefork
 
+1.01 Tue 25 Jul 2006
+	- Imported from CVS to svn repository
+
 1.00 Thu Sep  8 2005
 	- Has proven itself stable, promoting to 1.00
 	- Various small POD clean ups
