@@ -182,7 +182,7 @@ use Scalar::Util ();
 
 use vars qw{$VERSION $FORKING %MODULES @NOTIFY};
 BEGIN {
-	$VERSION = '1.01';
+	$VERSION = '1.02';
 
 	# The main state variable for this package.
 	# Are we in preforking mode.
@@ -371,7 +371,7 @@ Adam Kennedy, L<http://ali.as/>, cpan@ali.as
 Thank you to Phase N Australia (L<http://phase-n.com/>) for
 permitting the open sourcing and release of this distribution.
 
-Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
+Copyright (c) 2004 - 2005 Adam Kennedy.
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.

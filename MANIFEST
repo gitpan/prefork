@@ -17,4 +17,5 @@ t/01_compile.t
 t/02_main.t
 t/03_pragma.t
 t/04_notify.t
-t/99_pod.t
+t/98_pod.t
+t/99_pmv.t
