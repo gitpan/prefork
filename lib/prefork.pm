@@ -182,7 +182,7 @@ use Scalar::Util ();
 
 use vars qw{$VERSION $FORKING %MODULES @NOTIFY};
 BEGIN {
-	$VERSION = '1.02';
+	$VERSION = '1.03';
 
 	# The main state variable for this package.
 	# Are we in preforking mode.
@@ -192,7 +192,16 @@ BEGIN {
 	%MODULES = ();
 
 	# The queue of notification callbacks
-	@NOTIFY = ();
+	@NOTIFY = (
+		sub {
+			# Do a hash copy of Config to get everything
+			# inside of it preloaded.
+			require Config;
+			require 'Config_heavy.pl';
+			my $copy = { %Config::Config };
+			return 1;
+		},
+	);
 
 	# Look for situations that need us to start in forking mode
 	$FORKING = 1 if $ENV{MOD_PERL};
@@ -222,7 +231,7 @@ sub prefork ($) {
 	# Just hand straight to require if enabled
 	my $module = defined $_[0] ? "$_[0]" : ''
 		or Carp::croak('You did not pass a module name to prefork');
-	$module =~ /^[^\W\d]\w*(?:(?:'|::)[^\W\d]\w*)*$/
+	$module =~ /^[^\W\d]\w*(?:(?:\'|::)[^\W\d]\w*)*$/
 		or Carp::croak("'$module' is not a module name");
 	my $file = join( '/', split /(?:\'|::)/, $module ) . '.pm';
 
@@ -364,14 +373,14 @@ For other issues, or commercial enhancement or support, contact the author.
 
 =head1 AUTHOR
 
-Adam Kennedy, L<http://ali.as/>, cpan@ali.as
+Adam Kennedy <adamk@cpan.org>
 
 =head1 COPYRIGHT
 
 Thank you to Phase N Australia (L<http://phase-n.com/>) for
 permitting the open sourcing and release of this distribution.
 
-Copyright (c) 2004 - 2005 Adam Kennedy.
+Copyright 2004 - 2009 Adam Kennedy.
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.

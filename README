@@ -8,43 +8,43 @@ SYNOPSIS
       # We want to preload in in forking scenarios (like mod_perl), but
       # we want to delay loading in non-forking scenarios (like CGI)
       use prefork 'This::That';
-  
-      sub do_something {
+      
+  sub do_something {
             my $arg = shift;
-  
-            # Load the module at run-time as normal
+      
+        # Load the module at run-time as normal
             if ( $special_case ) {
                     require This::That;
                     This::That::blah(@_);
             }
       }
-  
-      # Register a module to be loaded before forking directly
+      
+  # Register a module to be loaded before forking directly
       prefork::prefork('Module::Name');
 
     In a script or module that is going to be forking.
 
       package Module::Forker;
-  
-      # Enable forking mode
+      
+  # Enable forking mode
       use prefork ':enable';
-  
-      # Or call it directly
+      
+  # Or call it directly
       prefork::enable();
 
     In a third-party run-time loader
 
       package Runtime::Loader;
-  
-      use prefork ();
+      
+  use prefork ();
       prefork::notify( \&load_everything );
-  
-      ...
-  
-      sub load_everything { ... }
-  
-      1;
-  
+      
+  ...
+      
+  sub load_everything { ... }
+      
+  1;
+
 INTRODUCTION
     The task of optimizing module loading in Perl tends to move in two
     different directions, depending on the context.
@@ -209,13 +209,13 @@ SUPPORT
     author.
 
 AUTHOR
-    Adam Kennedy, <http://ali.as/>, cpan@ali.as
+    Adam Kennedy <adamk@cpan.org>
 
 COPYRIGHT
     Thank you to Phase N Australia (<http://phase-n.com/>) for permitting
     the open sourcing and release of this distribution.
 
-    Copyright (c) 2004 - 2005 Adam Kennedy.
+    Copyright 2004 - 2009 Adam Kennedy.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
