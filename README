@@ -10,13 +10,13 @@ SYNOPSIS
       use prefork 'This::That';
       
   sub do_something {
-            my $arg = shift;
+          my $arg = shift;
       
-        # Load the module at run-time as normal
-            if ( $special_case ) {
-                    require This::That;
-                    This::That::blah(@_);
-            }
+      # Load the module at run-time as normal
+          if ( $special_case ) {
+              require This::That;
+              This::That::blah(@_);
+          }
       }
       
   # Register a module to be loaded before forking directly
@@ -146,7 +146,7 @@ DESCRIPTION
 
       use prefork;
       if ( $prefork::FORKING ) {
-            # Complete some preparation task
+          # Complete some preparation task
       }
 
   Modules that are prefork-aware
